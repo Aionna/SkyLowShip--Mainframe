@@ -106,6 +106,7 @@
             flex-direction: column;
             overflow: visible;
             margin-bottom: 50px;
+            transform: translateZ(0); /* Force GPU acceleration */
         }
         
         .message-header {
@@ -117,7 +118,7 @@
         }
         
         .message-text {
-            font-size: 18px;
+            font-size: 20px; /* Increased from 18px for better readability */
             line-height: 1.6;
             flex: 1;
         }
@@ -126,20 +127,29 @@
             margin-bottom: 20px;
         }
         
+        .error-message-container {
+            position: absolute;
+            bottom: -50px;
+            left: 0;
+            right: 0;
+            height: 40px; /* Fixed height */
+            overflow: hidden;
+            background-color: transparent;
+        }
+        
         .error-message {
             color: #ff0000;
             font-weight: bold;
             font-size: 24px;
             text-align: center;
-            position: absolute;
-            bottom: -40px;
-            left: 0;
-            right: 0;
+            width: 100%;
             padding: 10px;
             background-color: #001100;
             display: none;
             animation: error-blink 0.5s step-end infinite;
             z-index: 10;
+            transform: translateZ(0); /* Force GPU acceleration */
+            will-change: opacity; /* Optimize for animation */
         }
         
         .ship-info {
@@ -218,6 +228,31 @@
             51%, 100% { opacity: 0.6; }
         }
         
+        /* Responsive font size adjustments */
+        @media screen and (min-width: 1200px) {
+            .message-text {
+                font-size: 22px; /* Larger font for very large screens */
+            }
+            
+            .message-header {
+                font-size: 20px;
+            }
+            
+            .logo {
+                font-size: 42px;
+            }
+            
+            .subheader {
+                font-size: 20px;
+            }
+        }
+        
+        @media screen and (min-width: 992px) and (max-width: 1199px) {
+            .message-text {
+                font-size: 20px; /* Standard size for desktop */
+            }
+        }
+        
         @media (max-width: 768px) {
             .logo {
                 font-size: 28px;
@@ -228,7 +263,7 @@
             }
             
             .message-text {
-                font-size: 16px;
+                font-size: 18px;
                 line-height: 1.4;
             }
             
@@ -266,13 +301,12 @@
             }
             
             .message-text {
-                font-size: 14px;
+                font-size: 16px;
                 line-height: 1.3;
             }
             
             .error-message {
                 font-size: 16px;
-                bottom: -35px;
             }
         }
     </style>
@@ -316,7 +350,9 @@ Brace yourself for legendary drama, breathtaking battles, and an unnecessarily c
 Oh, and just to keep things extra messy, multiple degenerate Olympian gods will be dropping by! So grab your snacks and settle in ;) !</span>
                         </div>
                     </div>
-                    <div id="error-message" class="error-message">CONNECTION INTERCEPTED</div>
+                    <div class="error-message-container">
+                        <div id="error-message" class="error-message">CONNECTION INTERCEPTED</div>
+                    </div>
                 </div>
             </div>
             
