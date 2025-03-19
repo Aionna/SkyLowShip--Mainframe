@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARGOS Mainframe Terminal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #000;
+            font-family: 'VT323', monospace;
+            color: #0f0;
+            overflow: hidden;
+        }
+        
+        .terminal {
+            position: relative;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        
+        .screen {
+            height: 100%;
+            background-color: #001100;
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 255, 0, 0.1);
+            opacity: 0.75;
+            animation: scanline 6s linear infinite;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .flicker {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 50, 0, 0.1);
+            opacity: 0;
+            animation: flicker 0.3s infinite;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .logo {
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .subheader {
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+        
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .message-container {
+            border: 1px solid #0f0;
+            padding: 20px;
+            border-radius: 5px;
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: visible;
+            margin-bottom: 50px;
+        }
+        
+        .message-header {
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 1px solid #0f0;
+            padding-bottom: 10px;
+            flex-shrink: 0;
+        }
+        
+        .message-text {
+            font-size: 18px;
+            line-height: 1.6;
+            flex: 1;
+        }
+        
+        .message-line {
+            margin-bottom: 20px;
+        }
+        
+        .error-message {
+            color: #ff0000;
+            font-weight: bold;
+            font-size: 24px;
+            text-align: center;
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            background-color: #001100;
+            display: none;
+            animation: error-blink 0.5s step-end infinite;
+            z-index: 10;
+        }
+        
+        .ship-info {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+            letter-spacing: 1px;
+        }
+        
+        .status-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            opacity: 0.7;
+            background-color: #001100;
+            padding: 5px 0;
+            flex-shrink: 0;
+        }
+        
+        .ship-ascii {
+            font-family: monospace;
+            white-space: pre;
+            line-height: 1.2;
+            font-size: 10px;
+            color: #0f0;
+            text-align: center;
+            margin: 10px auto;
+            max-width: 200px;
+            display: block;
+        }
+        
+        .heart {
+            display: inline-block;
+            margin: 0 5px;
+        }
+        
+        .heart-link {
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+        }
+        
+        .heart-left {
+            animation: pulsate 1.5s ease-in-out infinite;
+        }
+        
+        .heart-right {
+            animation: pulsate 1.5s ease-in-out infinite 0.75s;
+        }
+        
+        @keyframes pulsate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes scanline {
+            0% { top: -5%; }
+            100% { top: 105%; }
+        }
+        
+        @keyframes flicker {
+            0% { opacity: 0.1; }
+            50% { opacity: 0; }
+            100% { opacity: 0.15; }
+        }
+        
+        @keyframes error-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.6; }
+        }
+        
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 28px;
+            }
+            
+            .subheader {
+                font-size: 16px;
+            }
+            
+            .message-text {
+                font-size: 16px;
+                line-height: 1.4;
+            }
+            
+            .ship-ascii {
+                font-size: 8px;
+                margin: 5px auto;
+            }
+            
+            .error-message {
+                font-size: 18px;
+            }
+            
+            .header {
+                margin-bottom: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 24px;
+            }
+            
+            .ship-info {
+                top: 5px;
+                font-size: 12px;
+                right: 15px;
+            }
+            
+            .status-bar {
+                font-size: 12px;
+            }
+            
+            .message-container {
+                padding: 10px;
+            }
+            
+            .message-text {
+                font-size: 14px;
+                line-height: 1.3;
+            }
+            
+            .error-message {
+                font-size: 16px;
+                bottom: -35px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="screen">
+            <div class="scanline"></div>
+            <div class="flicker"></div>
+            
+            <div class="ship-info">ARGOS SYSTEM v2.14.3</div>
+            
+            <div class="header">
+                <div class="logo">ARGOS</div>
+                <div class="subheader">
+                    <span class="heart heart-left">❤️</span>
+                    🐶SkyLowShip🐶
+                    <span class="heart heart-right"><a href="https://example.com" class="heart-link">❤️</a></span>
+                </div>
+                <div class="ship-ascii">
+     /^-^\
+    / o o \
+   /   Y   \
+   V \ v / V
+    / - \
+   /    |
+  --------------
+</div>
+            </div>
+            
+            <div class="content">
+                <div class="message-container">
+                    <div class="message-header">INCOMING TRANSMISSION</div>
+                    <div class="message-text">
+                        <div class="message-line">
+                            <span id="location-text">LOCATION: FILM SET</span>
+                        </div>
+                        <div class="message-line">
+                            <span id="message-text">MESSAGE: The epic saga is hitting your screen this weekend: "Celestial Lotus Kingdom: The Thousand-Year Peach Blossom Curse of the Phoenix Empress - Budget Edition"!
+Brace yourself for legendary drama, breathtaking battles, and an unnecessarily complicated prophecy. Starring Yī Ào Ān Nà as the fierce Phoenix Empress, Cédric as the brooding Silver-Haired Samurai Prince of the West, and Ioanna as the penny-pinching Lady Drachma.
+Oh, and just to keep things extra messy, multiple degenerate Olympian gods will be dropping by! So grab your snacks and settle in ;) !</span>
+                        </div>
+                    </div>
+                    <div id="error-message" class="error-message">CONNECTION INTERCEPTED</div>
+                </div>
+            </div>
+            
+            <div class="status-bar">
+                <div id="date-time">DATE: 2343.07.12 | TIME: 23:42:18</div>
+                <div>SYSTEM STATUS: ALERT</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Type location text
+            let locationText = document.getElementById('location-text');
+            let fullLocationText = locationText.textContent;
+            locationText.textContent = '';
+            
+            // Type message text
+            let messageText = document.getElementById('message-text');
+            let fullMessageText = messageText.textContent;
+            messageText.textContent = '';
+            
+            let errorMessage = document.getElementById('error-message');
+            
+            function typeLocation(index) {
+                if (index < fullLocationText.length) {
+                    locationText.textContent += fullLocationText.charAt(index);
+                    setTimeout(() => typeLocation(index + 1), 50);
+                } else {
+                    // Start typing the message after location is done
+                    setTimeout(startMessageTyping, 500);
+                }
+            }
+            
+            function typeMessage(index) {
+                if (index < fullMessageText.length) {
+                    messageText.textContent += fullMessageText.charAt(index);
+                    setTimeout(() => typeMessage(index + 1), 50);
+                } else {
+                    // Show error message after message typing is complete
+                    setTimeout(() => {
+                        errorMessage.style.display = 'block';
+                    }, 800);
+                }
+            }
+            
+            function startMessageTyping() {
+                typeMessage(0);
+            }
+            
+            // Update date and time
+            function updateDateTime() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                
+                document.getElementById('date-time').textContent = 
+                    `DATE: ${year}.${month}.${day} | TIME: ${hours}:${minutes}:${seconds}`;
+            }
+            
+            // Initial update
+            updateDateTime();
+            
+            // Update every second
+            setInterval(updateDateTime, 1000);
+            
+            // Add random screen flicker
+            setInterval(() => {
+                const screen = document.querySelector('.screen');
+                if (Math.random() > 0.7) {
+                    screen.style.opacity = (Math.random() * 0.2 + 0.8).toString();
+                    setTimeout(() => {
+                        screen.style.opacity = '1';
+                    }, 100);
+                }
+            }, 2000);
+            
+            // Start the typing sequence
+            typeLocation(0);
+        });
+    </script>
+</body>
+</html>
